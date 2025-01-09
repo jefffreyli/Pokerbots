@@ -25,7 +25,12 @@ class Player(Bot):
         Returns:
         Nothing.
         '''
-        pass
+        self.hand_ranges = {
+            "fantastic": {"AA", "KK", "QQ", "JJ", "TT", "AK"},
+            "great": {"AQ", "AJ", "KQ", "88", "99"},
+            "decent": {"22", "33", "44", "55", "66", "77", "T9s", "JTs"},
+            "speculative": {"A5s", "K7s", "QJs", "T8s"}
+        }
 
     def handle_new_round(self, game_state, round_state, active):
         '''
@@ -104,18 +109,27 @@ class Player(Bot):
         opp_contribution = STARTING_STACK - opp_stack  # the number of chips your opponent has contributed to the pot
 
         
+        # if RaiseAction in legal_actions:
+        #    min_raise, max_raise = round_state.raise_bounds()  # the smallest and largest numbers of chips for a legal bet/raise
+        #    min_cost = min_raise - my_pip  # the cost of a minimum bet/raise
+        #    max_cost = max_raise - my_pip  # the cost of a maximum bet/raise
+        # if RaiseAction in legal_actions:
+        #     if random.random() < 0.5:
+        #         return RaiseAction(min_raise)
+        # if CheckAction in legal_actions:  # check-call
+        #     return CheckAction()
+        # if random.random() < 0.25:
+        #     return FoldAction()
+        # return CallAction()
+    
         if RaiseAction in legal_actions:
-           min_raise, max_raise = round_state.raise_bounds()  # the smallest and largest numbers of chips for a legal bet/raise
-           min_cost = min_raise - my_pip  # the cost of a minimum bet/raise
-           max_cost = max_raise - my_pip  # the cost of a maximum bet/raise
-        if RaiseAction in legal_actions:
-            if random.random() < 0.5:
-                return RaiseAction(min_raise)
-        if CheckAction in legal_actions:  # check-call
-            return CheckAction()
-        if random.random() < 0.25:
-            return FoldAction()
-        return CallAction()
+            _, max_raise = round_state.raise_bounds()  # Raise
+            return RaiseAction(max_raise)  # All-in
+        elif CallAction in legal_actions:
+            return CallAction()  # Call
+        elif CheckAction in legal_actions:
+            return CheckAction()  # Check
+        return FoldAction()  # Fold
 
 
 if __name__ == '__main__':
