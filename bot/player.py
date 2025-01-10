@@ -38,7 +38,7 @@ class Player(Bot):
         print(f"my cards: {my_cards}")
         print(f"board card: {board_cards}")
 
-        MC_ITER = 100
+        MC_ITER = 1000
 
         my_cards = [eval7.Card(card) for card in my_cards]
         board_cards = [eval7.Card(card) for card in board_cards]
@@ -53,8 +53,8 @@ class Player(Bot):
 
             deck.shuffle()
 
-            draw_number = 2 + (5 - len(board_cards))
-            draw = deck.peek(draw_number)
+            num_cards_needed = 2 + (5 - len(board_cards))
+            draw = deck.peek(num_cards_needed)
 
             opp_draw = draw[:2]
             board_draw = draw[2:]
@@ -182,7 +182,7 @@ class Player(Bot):
                 return RaiseAction(raise_amt)
 
         # raise with 50% probability
-        if RaiseAction in legal_actions:
+        elif RaiseAction in legal_actions:
             if random.random() < 0.5:
                 if win_rate > 2 * pot_odds:
                     raise_amount = int(min_raise + (max_raise - min_raise) * 0.1)
