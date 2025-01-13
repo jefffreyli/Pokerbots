@@ -35,10 +35,7 @@ class Player(Bot):
         
 
     def calculate_win_rate(self, my_cards, board_cards):
-        print(f"my cards: {my_cards}")
-        print(f"board card: {board_cards}")
-
-        MC_ITER = 1000
+        MC_ITER = 100
 
         my_cards = [eval7.Card(card) for card in my_cards]
         board_cards = [eval7.Card(card) for card in board_cards]
@@ -73,7 +70,6 @@ class Player(Bot):
                 score += 0.5
         
         win_rate = score / MC_ITER
-        print(f"win rate: {win_rate}")
 
         return win_rate
 
@@ -121,11 +117,14 @@ class Player(Bot):
         Returns:
         Nothing.
         '''
-        #my_delta = terminal_state.deltas[active]  # your bankroll change from this round
+        my_delta = terminal_state.deltas[active]  # your bankroll change from this round
         previous_state = terminal_state.previous_state  # RoundState before payoffs
         #street = previous_state.street  # 0, 3, 4, or 5 representing when this round ended
         #my_cards = previous_state.hands[active]  # your cards
         #opp_cards = previous_state.hands[1-active]  # opponent's cards or [] if not revealed
+
+        print("My delta: ", my_delta)
+        print("------------------------------------------")
         
         my_bounty_hit = terminal_state.bounty_hits[active]  # True if you hit bounty
         opponent_bounty_hit = terminal_state.bounty_hits[1-active] # True if opponent hit bounty
@@ -167,32 +166,48 @@ class Player(Bot):
 
         win_rate = self.calculate_win_rate(my_cards, board_cards)
         pot_odds = continue_cost / (my_pip + opp_pip + 0.1)
-
         min_raise, max_raise = round_state.raise_bounds()  # the smallest and largest numbers of chips for a legal bet/raise
+        print("My cards: ", my_cards)
+        print("Board cards: ", board_cards)
+        print("Win rate: ", win_rate)
+        print("Pot odds: ", pot_odds)
+        print("My pip: ", my_pip)
+        print("Opp pip: ", opp_pip)
+        print("Min raise: ", min_raise)
+        print("Max raise: ", max_raise)
 
-        if RaiseAction in legal_actions and self.strong_hole is True:
-            for card in my_cards + board_cards:
-                if card[0] == my_bounty:
-                    return RaiseAction(max_raise)
+        print("---")
 
-            raise_prob = 0.8
-            raise_amt = int(min_raise + (max_raise - min_raise) * 0.1)
+        # if RaiseAction in legal_actions and self.strong_hole is True:
+        #     for card in my_cards + board_cards:
+        #         if card[0] == my_bounty:
+        #             return RaiseAction(max_raise)
 
-            if random.random() < raise_prob:
-                return RaiseAction(raise_amt)
+        #     raise_prob = 0.8
+        #     raise_amt = int(min_raise + (max_raise - min_raise) * 0.1)
 
-        # raise with 50% probability
-        elif RaiseAction in legal_actions:
-            if random.random() < 0.5:
-                if win_rate > 2 * pot_odds:
+        #     if random.random() < raise_prob:
+        #         return RaiseAction(raise_amt)
+
+        if win_rate > pot_odds:
+            if RaiseAction in legal_actions:
                     raise_amount = int(min_raise + (max_raise - min_raise) * 0.1)
                     return RaiseAction(raise_amount)
-                return RaiseAction(min_raise)
-        if CheckAction in legal_actions:  # check-call
-            return CheckAction()
-        if random.random() < 0.25:
-            return FoldAction()
-        return CallAction()
+            else:
+                return CallAction()
+        else:
+            if random.random() < 0.12:
+                if RaiseAction in legal_actions:
+                    raise_amount = int(min_raise + (max_raise - min_raise) * 0.1)
+                    return RaiseAction(raise_amount)
+                elif CallAction in legal_actions:
+                    return CallAction()
+            else:
+                if CheckAction in legal_actions:
+                    return CheckAction()
+                else:
+                    return FoldAction()
+        return FoldAction()
 
 
 if __name__ == '__main__':
