@@ -175,6 +175,7 @@ class Player(Bot):
         print("Opp pip: ", opp_pip)
         print("Min raise: ", min_raise)
         print("Max raise: ", max_raise)
+        print("My bounty: ", my_bounty)
 
         print("---")
 
@@ -189,12 +190,22 @@ class Player(Bot):
         #     if random.random() < raise_prob:
         #         return RaiseAction(raise_amt)
 
+        for card in my_cards + board_cards:
+            if card[0] == my_bounty:
+                if win_rate > pot_odds:
+                    if RaiseAction in legal_actions:
+                        return RaiseAction(max_raise)
+                    elif CallAction in legal_actions:
+                        return CallAction()
+
         if win_rate > pot_odds:
             if RaiseAction in legal_actions:
                     raise_amount = int(min_raise + (max_raise - min_raise) * 0.1)
                     return RaiseAction(raise_amount)
-            else:
+            elif CallAction in legal_actions:
                 return CallAction()
+            elif CheckAction in legal_actions:
+                return CheckAction()
         else:
             if random.random() < 0.12:
                 if RaiseAction in legal_actions:
