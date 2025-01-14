@@ -26,16 +26,71 @@ class Player(Bot):
         Returns:
         Nothing.
         '''
+
         self.hand_ranges = {
-            "fantastic": {"AA", "KK", "QQ", "JJ", "TT", "AK"},
-            "great": {"AQ", "AJ", "KQ", "88", "99"},
-            "decent": {"22", "33", "44", "55", "66", "77", "T9s", "JTs"},
-            "speculative": {"A5s", "K7s", "QJs", "T8s"}
+            "blue": {
+                ("Ah", "Ad"), ("Ah", "Ac"), ("Ah", "As"), ("Ad", "Ac"), ("Ad", "As"), ("Ac", "As"),  # AA
+                ("Kh", "Kd"), ("Kh", "Kc"), ("Kh", "Ks"), ("Kd", "Kc"), ("Kd", "Ks"), ("Kc", "Ks"),  # KK
+                ("Qh", "Qd"), ("Qh", "Qc"), ("Qh", "Qs"), ("Qd", "Qc"), ("Qd", "Qs"), ("Qc", "Qs"),  # QQ
+                ("Jh", "Jd"), ("Jh", "Jc"), ("Jh", "Js"), ("Jd", "Jc"), ("Jd", "Js"), ("Jc", "Js"),  # JJ
+                ("Th", "Td"), ("Th", "Tc"), ("Th", "Ts"), ("Td", "Tc"), ("Td", "Ts"), ("Tc", "Ts"),  # TT
+                ("Ah", "Kh"), ("Kh", "Ah"), ("Ad", "Kd"), ("Kd", "Ad"), ("Ac", "Kc"), ("Kc", "Ac"),  # AK
+                ("As", "Ks"), ("Ks", "As"), ("Ah", "Kd"), ("Ah", "Kc"), ("Ah", "Ks"), ("Kh", "Ad"), 
+                ("Kh", "Ac"), ("Kh", "As"), ("Ad", "Kc"), ("Ad", "Ks"), ("Kd", "Ah"), ("Kd", "Ac"), 
+                ("Kd", "As"), ("Ac", "Ks"), ("Ac", "Kh"), ("Kc", "Ah"), ("Kc", "Ad"), ("Kc", "As"),
+                ("As", "Kh"), ("As", "Kd"), ("Ks", "Ah"), ("Ks", "Ad"), ("Ks", "Ac")
+            },
+            "green": {
+                ("Ah", "Qh"), ("Ad", "Qd"), ("Ac", "Qc"), ("As", "Qs"),  # AQ suited
+                ("Ah", "Jh"), ("Ad", "Jd"), ("Ac", "Jc"), ("As", "Js"),  # AJ suited
+                ("Kh", "Qh"), ("Kd", "Qd"), ("Kc", "Qc"), ("Ks", "Qs"),  # KQ suited
+                ("8h", "8d"), ("8h", "8c"), ("8h", "8s"), ("8d", "8c"), ("8d", "8s"), ("8c", "8s"),  # 88
+                ("9h", "9d"), ("9h", "9c"), ("9h", "9s"), ("9d", "9c"), ("9d", "9s"), ("9c", "9s")   # 99
+            },
+            "yellow": {
+                ("2h", "2d"), ("2h", "2c"), ("2h", "2s"), ("2d", "2c"), ("2d", "2s"), ("2c", "2s"),  # 22
+                ("3h", "3d"), ("3h", "3c"), ("3h", "3s"), ("3d", "3c"), ("3d", "3s"), ("3c", "3s"),  # 33
+                ("4h", "4d"), ("4h", "4c"), ("4h", "4s"), ("4d", "4c"), ("4d", "4s"), ("4c", "4s"),  # 44
+                ("5h", "5d"), ("5h", "5c"), ("5h", "5s"), ("5d", "5c"), ("5d", "5s"), ("5c", "5s"),  # 55
+                ("6h", "6d"), ("6h", "6c"), ("6h", "6s"), ("6d", "6c"), ("6d", "6s"), ("6c", "6s"),  # 66
+                ("7h", "7d"), ("7h", "7c"), ("7h", "7s"), ("7d", "7c"), ("7d", "7s"), ("7c", "7s"),  # 77
+                ("Th", "9h"), ("Td", "9d"), ("Tc", "9c"), ("Ts", "9s"),  # T9s
+                ("Jh", "Th"), ("Jd", "Td"), ("Jc", "Tc"), ("Js", "Ts")   # JTs
+            },
+            "orange": {
+                ("Ah", "5h"), ("Ad", "5d"), ("Ac", "5c"), ("As", "5s"),  # A5s
+                ("Kh", "7h"), ("Kd", "7d"), ("Kc", "7c"), ("Ks", "7s"),  # K7s
+                ("Qh", "Jh"), ("Qd", "Jd"), ("Qc", "Jc"), ("Qs", "Js"),  # QJs
+                ("Th", "8h"), ("Td", "8d"), ("Tc", "8c"), ("Ts", "8s")   # T8s
+            }
         }
+        
+        self.broadway = {'A', 'K', 'Q', 'J', 'T'}
+
+    def preflop_strength(self, my_cards):
+
+        card1_rank = my_cards[0][0]
+        card1_suit = my_cards[0][1]
+        card2_rank = my_cards[1][0]
+        card2_suit = my_cards[1][1]
+
+        
+        if card1_rank == card2_rank:
+            if card1_rank in self.broadway:
+                return "blue"
+            elif card1_rank in {'8', '9'}:
+                return "green"
+            else:
+                return "yellow"
+        elif card1_rank in self.broadway and card2_rank in self.broadway:
+            return "green"
+        else:
+            return "orange"
+
         
 
     def calculate_win_rate(self, my_cards, board_cards):
-        MC_ITER = 100
+        MC_ITER = 1000
 
         my_cards = [eval7.Card(card) for card in my_cards]
         board_cards = [eval7.Card(card) for card in board_cards]
@@ -73,6 +128,39 @@ class Player(Bot):
 
         return win_rate
 
+    def calculate_outs(self, my_cards, board_cards):
+        '''
+        Calculate the number of outs (cards that improve your hand) using eval7.
+
+        Arguments:
+        my_cards: List of your hole cards (e.g., ['Ah', 'Kd']).
+        board_cards: List of community cards currently on the board (e.g., ['Qs', 'Jd', '7h']).
+
+        Returns:
+        Number of outs.
+        '''
+        my_cards = [eval7.Card(card) for card in my_cards]
+        board_cards = [eval7.Card(card) for card in board_cards]
+
+        # Remaining deck excluding known cards
+        deck = eval7.Deck()
+        known_cards = my_cards + board_cards
+        for card in known_cards:
+            deck.cards.remove(card)
+
+        best_hand_score = eval7.evaluate(my_cards + board_cards)
+        outs = 0
+
+        for draw_card in deck.cards:
+            # Simulate the board with one more card
+            simulated_board = board_cards + [draw_card]
+            my_hand_score = eval7.evaluate(my_cards + simulated_board)
+
+            if my_hand_score > best_hand_score:
+                outs += 1
+
+        return outs
+
 
     def handle_new_round(self, game_state, round_state, active):
         '''
@@ -93,17 +181,6 @@ class Player(Bot):
         big_blind = bool(active)  # True if you are the big blind
         my_bounty = round_state.bounties[active]  # your current bounty rank
         
-        self.strong_hole = False
-        card1 = my_cards[0] # '9s', 'Ad', 'Th'
-        card2 = my_cards[1] 
-
-        rank1 = card1[0]
-        suit1 = card1[1]
-        rank2 = card2[0]
-        suit2 = card2[1]
-
-        if rank1 == rank2 or ((rank1 in "AKQJ") and (rank2 in "AKQJ")):
-            self.strong_hole = True
 
     def handle_round_over(self, game_state, terminal_state, active):
         '''
@@ -137,6 +214,7 @@ class Player(Bot):
             print("I hit my bounty of " + bounty_rank + "!")
         if opponent_bounty_hit:
             print("Opponent hit their bounty of " + opponent_bounty_rank + "!")
+
 
     def get_action(self, game_state, round_state, active):
         '''
@@ -179,17 +257,8 @@ class Player(Bot):
 
         print("---")
 
-        # if RaiseAction in legal_actions and self.strong_hole is True:
-        #     for card in my_cards + board_cards:
-        #         if card[0] == my_bounty:
-        #             return RaiseAction(max_raise)
 
-        #     raise_prob = 0.8
-        #     raise_amt = int(min_raise + (max_raise - min_raise) * 0.1)
-
-        #     if random.random() < raise_prob:
-        #         return RaiseAction(raise_amt)
-
+        # check if bounty hit
         for card in my_cards + board_cards:
             if card[0] == my_bounty:
                 if win_rate > pot_odds:
@@ -198,16 +267,26 @@ class Player(Bot):
                     elif CallAction in legal_actions:
                         return CallAction()
 
-        if win_rate > pot_odds:
+        # On the preflop round, if the hole cards are blue or green, continue to play
+        if street == 0 and self.preflop_strength(my_cards) in {"blue", "green"}:
             if RaiseAction in legal_actions:
-                    raise_amount = int(min_raise + (max_raise - min_raise) * 0.1)
-                    return RaiseAction(raise_amount)
+                raise_amount = int(min_raise + (max_raise - min_raise) * 0.1)
+                return RaiseAction(raise_amount)
+            elif CallAction in legal_actions:
+                return CallAction()
+            elif CheckAction in legal_actions:
+                return CheckAction()
+
+        elif win_rate > pot_odds:
+            if RaiseAction in legal_actions:
+                raise_amount = int(min_raise + (max_raise - min_raise) * 0.1)
+                return RaiseAction(raise_amount)
             elif CallAction in legal_actions:
                 return CallAction()
             elif CheckAction in legal_actions:
                 return CheckAction()
         else:
-            if random.random() < 0.12:
+            if random.random() < 0.0:
                 if RaiseAction in legal_actions:
                     raise_amount = int(min_raise + (max_raise - min_raise) * 0.1)
                     return RaiseAction(raise_amount)
@@ -218,6 +297,7 @@ class Player(Bot):
                     return CheckAction()
                 else:
                     return FoldAction()
+        
         return FoldAction()
 
 
