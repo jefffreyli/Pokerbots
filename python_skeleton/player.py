@@ -25,12 +25,6 @@ class Player(Bot):
         Returns:
         Nothing.
         '''
-        self.hand_ranges = {
-            "fantastic": {"AA", "KK", "QQ", "JJ", "TT", "AK"},
-            "great": {"AQ", "AJ", "KQ", "88", "99"},
-            "decent": {"22", "33", "44", "55", "66", "77", "T9s", "JTs"},
-            "speculative": {"A5s", "K7s", "QJs", "T8s"}
-        }
 
     def handle_new_round(self, game_state, round_state, active):
         '''
