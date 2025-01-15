@@ -15,6 +15,18 @@ class Player(Bot):
     '''
     A pokerbot.
     '''
+    HAND_RANKS = {
+        "Royal Flush":      1,
+        "Straight Flush":   2,
+        "Four of a Kind":   3,
+        "Full House":       4,
+        "Flush":            5,
+        "Straight":         6,
+        "Three of a Kind":  7,
+        "Two Pair":         8,
+        "One Pair":         9,
+        "High Card":       10
+    }
 
     def __init__(self):
         '''
@@ -124,7 +136,7 @@ class Player(Bot):
         
 
     def calculate_win_rate(self, my_cards, board_cards):
-        MC_ITER = 1000
+        MC_ITER = 100
 
         my_cards = [eval7.Card(card) for card in my_cards]
         board_cards = [eval7.Card(card) for card in board_cards]
@@ -275,10 +287,13 @@ class Player(Bot):
         my_bounty = round_state.bounties[active]  # your current bounty rank
         my_contribution = STARTING_STACK - my_stack  # the number of chips you have contributed to the pot
         opp_contribution = STARTING_STACK - opp_stack  # the number of chips your opponent has contributed to the pot
+        pot_total = my_contribution + opp_contribution
 
         win_rate = self.calculate_win_rate(my_cards, board_cards)
         pot_odds = continue_cost / (my_pip + opp_pip + 0.1)
         min_raise, max_raise = round_state.raise_bounds()  # the smallest and largest numbers of chips for a legal bet/raise
+        
+        big_blind = bool(active)
         
         self.print_info(game_state, round_state, active)
 
@@ -301,12 +316,14 @@ class Player(Bot):
                         return CheckAction()
 
         # On the preflop round, only continue if the hand strength is blue or green
-        if street == 0 and not self.is_green(my_cards):
+        if street < 3 and not self.is_green(my_cards):
+            if big_blind and CheckAction in legal_actions:
+                return CheckAction()
             return FoldAction()
 
         if win_rate > pot_odds:
             if RaiseAction in legal_actions:
-                raise_amount = int(min_raise + (max_raise - min_raise) * 0.1)
+                raise_amount = int(min_raise + (max_raise - min_raise) * 0.09)
                 return RaiseAction(raise_amount)
             elif CallAction in legal_actions:
                 return CallAction()
@@ -316,7 +333,7 @@ class Player(Bot):
         # bluff 10% of "bad" hands
         elif random.random() < 0.1:
             if RaiseAction in legal_actions:
-                raise_amount = int(min_raise + (max_raise - min_raise) * 0.1)
+                raise_amount = int(min_raise + (max_raise - min_raise) * 0.09)
                 return RaiseAction(raise_amount)
             elif CallAction in legal_actions:
                 return CallAction()
@@ -326,6 +343,32 @@ class Player(Bot):
                 return FoldAction()
         
         return FoldAction()
+    
+    def hand_rank(self, my_cards, board_cards):
+        """
+        Evaluates the best 5-card hand from my_cards + board_cards
+        and returns an integer 1..10,
+        where 1 is the best category (nut flush / royal flush)
+        and 10 is the worst (high card).
+        """
+
+        # 1) Convert string cards (e.g. 'As', 'Th') into eval7.Card objects
+        all_cards = [eval7.Card(c) for c in my_cards + board_cards]
+
+        # 2) Evaluate and get an integer score (lower = stronger)
+        hand_value = eval7.evaluate(all_cards)
+
+        # 3) Convert that score into a string category, e.g. 'Flush', 'Two Pair'
+        hand_type_str = eval7.handtype(hand_value)
+
+        # 4) Map that string to a 1..10 rank using HAND_RANKS
+        #    (If eval7 returns "Straight Flush" for a Royal Flush,
+        #     you'll need custom logic to detect if it's specifically a "Royal".)
+        #    By default, eval7.handtype() does distinguish "Straight Flush"
+        #    vs "Royal Flush".
+        rank_num = self.HAND_RANKS.get(hand_type_str, 10)  # default to 10 if unknown
+
+        return rank_num
 
     def bounty_in_hand(self, cards, bounty_rank):
             """
@@ -344,10 +387,6 @@ class Player(Bot):
         """
         ranks = [c[0] for c in board]
         return (bounty_rank in ranks)
-
-
-
-
 
     def print_info(self, game_state, round_state, active):
         """
