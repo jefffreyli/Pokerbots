@@ -8,6 +8,7 @@ from skeleton.bot import Bot
 from skeleton.runner import parse_args, run_bot
 
 import random
+import eval7
 
 
 class Player(Bot):
@@ -25,6 +26,7 @@ class Player(Bot):
         Returns:
         Nothing.
         '''
+        pass
 
     def handle_new_round(self, game_state, round_state, active):
         '''
@@ -76,6 +78,50 @@ class Player(Bot):
         if opponent_bounty_hit:
             print("Opponent hit their bounty of " + opponent_bounty_rank + "!")
 
+    def calculate_strength(self, my_cards, board_cards):
+        print(f"my cards: {my_cards}")
+        print(f"board card: {board_cards}")
+
+        MC_ITER = 100
+
+        my_cards = [eval7.Card(card) for card in my_cards]
+        board_cards = [eval7.Card(card) for card in board_cards]
+
+        deck = eval7.Deck()
+
+        for card in my_cards + board_cards:
+            deck.cards.remove(card)
+        
+        score = 0
+        for _ in range(MC_ITER):
+
+            deck.shuffle()
+
+            draw_number = 2 + (5 - len(board_cards))
+            draw = deck.peek(draw_number)
+
+            opp_draw = draw[:2]
+            board_draw = draw[2:]
+
+            my_hand = my_cards + board_cards + board_draw
+            opp_hand = opp_draw + board_cards + board_draw
+
+            my_value = eval7.evaluate(my_hand)
+            opp_value = eval7.evaluate(opp_hand)
+
+            if my_value > opp_value:
+                score += 1
+            elif my_value < opp_value:
+                score += 0
+            else:
+                score += 0.5
+        
+        win_rate = score / MC_ITER
+        print(f"win rate: {win_rate}")
+
+        return win_rate
+
+
     def get_action(self, game_state, round_state, active):
         '''
         Where the magic happens - your code should implement this function.
@@ -102,13 +148,18 @@ class Player(Bot):
         my_contribution = STARTING_STACK - my_stack  # the number of chips you have contributed to the pot
         opp_contribution = STARTING_STACK - opp_stack  # the number of chips your opponent has contributed to the pot
 
-        
+        strength = self.calculate_strength(my_cards, board_cards)
+        pot_odds = continue_cost / (my_pip + opp_pip + 0.1)
+
         if RaiseAction in legal_actions:
            min_raise, max_raise = round_state.raise_bounds()  # the smallest and largest numbers of chips for a legal bet/raise
            min_cost = min_raise - my_pip  # the cost of a minimum bet/raise
            max_cost = max_raise - my_pip  # the cost of a maximum bet/raise
         if RaiseAction in legal_actions:
             if random.random() < 0.5:
+                if strength > 2*pot_odds:
+                    raise_amount = int(min_raise + 0.1 * (max_raise - min_raise))
+                    return RaiseAction(raise_amount)
                 return RaiseAction(min_raise)
         if CheckAction in legal_actions:  # check-call
             return CheckAction()

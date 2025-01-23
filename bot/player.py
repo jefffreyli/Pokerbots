@@ -244,6 +244,9 @@ class Player(Bot):
         Returns:
         Your action.
         '''
+        self.print_info(game_state, round_state, active)
+
+        # VARIABLESVARIABLESVARIABLESVARIABLESVARIABLESVARIABLES
         legal_actions = round_state.legal_actions()  # the actions you are allowed to take
         street = round_state.street  # 0, 3, 4, or 5 representing pre-flop, flop, turn, or river respectively
         my_cards = round_state.hands[active]  # your cards
@@ -257,25 +260,20 @@ class Player(Bot):
         my_contribution = STARTING_STACK - my_stack  # the number of chips you have contributed to the pot
         opp_contribution = STARTING_STACK - opp_stack  # the number of chips your opponent has contributed to the pot
         pot_total = my_contribution + opp_contribution
-
-        win_rate = self.calculate_win_rate(my_cards, board_cards)
-        pot_odds = continue_cost / (my_pip + opp_pip + 0.1)
         min_raise, max_raise = round_state.raise_bounds()  # the smallest and largest numbers of chips for a legal bet/raise
         
         big_blind = bool(active)
         small_blind = not big_blind
-        
-        self.print_info(game_state, round_state, active)
-
+        win_rate = self.calculate_win_rate(my_cards, board_cards)
+        pot_odds = continue_cost / (pot_total + continue_cost + 0.1)
+        bounty_bonus_ev = 0.405 * (0.5 * opp_pip + 10)
+        effective_pot_odds = continue_cost / (pot_total + continue_cost + bounty_bonus_ev)
         hole_strength = self.hole_strength(my_cards)
-
-        # Track if a raise has been made
-        has_raised = my_pip > opp_pip
-        print("has_raised: ", has_raised, my_pip, opp_pip)
+        has_raised = my_pip > 1
         hand_rank = self.hand_rank(my_cards, board_cards)
-        print("hand_rank: ", hand_rank)
         has_hit_bounty = self.bounty_hit(my_cards, board_cards, my_bounty)
 
+        # STRATEGYSTRATEGYSTRATEGYSTRATEGYSTRATEGYSTRATEGY
         # On the preflop round, check fold some percentage of the time on "weak" hands
         if street < 3 and hole_strength == "green":
             if not has_raised and RaiseAction in legal_actions:
@@ -291,45 +289,34 @@ class Player(Bot):
                 if small_blind and continue_cost < 5 and CallAction in legal_actions: # call to see the flop
                     return CallAction()
                 else:
-                    print("Folding on yellow")
                     return CheckAction() if CheckAction in legal_actions else FoldAction()
             else:
                 if not has_raised and RaiseAction in legal_actions:
                     raise_amount = int(min_raise + (max_raise - min_raise) * 0.015)
                     return RaiseAction(raise_amount)
-                elif CallAction in legal_actions:
-                    return CallAction()
-                elif CheckAction in legal_actions:
-                    return CheckAction()
+                return CallAction() if CallAction in legal_actions else CheckAction()
         
         if street < 3 and hole_strength == "orange":
             if random.random() < 0.05 and not has_hit_bounty:
                 if small_blind and continue_cost < 5 and CallAction in legal_actions: # call to see the flop
                     return CallAction()
                 else:
-                    print("Folding on orange")
                     return CheckAction() if CheckAction in legal_actions else FoldAction()
             else:
                 if not has_raised and RaiseAction in legal_actions:
                     raise_amount = int(min_raise + (max_raise - min_raise) * 0.015)
                     return RaiseAction(raise_amount)
-                elif CallAction in legal_actions:
-                    return CallAction()
-                elif CheckAction in legal_actions:
-                    return CheckAction()
+                return CallAction() if CallAction in legal_actions else CheckAction()
 
         if street == 3:
-            if random.random() < 0.8:
+            if win_rate > effective_pot_odds :
                 if RaiseAction in legal_actions and hand_rank <= 9:
                     raise_amount = int(min_raise + (max_raise - min_raise) * 0.03)
                     return RaiseAction(raise_amount)
-            if CheckAction in legal_actions:
-                return CheckAction()
-            if CallAction in legal_actions:
-                return CallAction()
+            return CallAction() if CallAction in legal_actions else CheckAction()
         
         if street == 4:
-            if win_rate > pot_odds: # good chance of winning
+            if win_rate > effective_pot_odds: # good chance of winning
                 if RaiseAction in legal_actions and hand_rank <= 9:
                     raise_amount = int(min_raise + (max_raise - min_raise) * 0.15)
                     return RaiseAction(raise_amount)
@@ -338,20 +325,15 @@ class Player(Bot):
                 elif CheckAction in legal_actions:
                     return CheckAction()
             else: # bad chance of winning
-                if CheckAction in legal_actions:
-                    return CheckAction()
-                elif CallAction in legal_actions:
-                    return CallAction()
+                return CallAction() if CallAction in legal_actions else CheckAction()
         
         if street == 5:
-            if win_rate > 0.85:
+            if win_rate > effective_pot_odds:
                 if RaiseAction in legal_actions:
                     raise_amount = int(min_raise + (max_raise - min_raise) * 0.3)
                     return RaiseAction(raise_amount)
-                elif CallAction in legal_actions:
-                    return CallAction()
-                elif CheckAction in legal_actions:
-                    return CheckAction()
+                return CallAction() if CallAction in legal_actions else CheckAction()
+            return CallAction() if CallAction in legal_actions else CheckAction()
         
         # Default action
         return CheckAction() if CheckAction in legal_actions else FoldAction()
@@ -424,6 +406,40 @@ class Player(Bot):
         else:
             return "dry"
 
+    def hand_strength(self, my_cards, board_cards):
+        '''
+        Evaluate the strength of the player's hand relative to the board.
+
+        Arguments:
+        my_cards: List of the player's hole cards (e.g., ['Ah', 'Kd']).
+        board_cards: List of community cards currently on the board (e.g., ['Qs', 'Jd', '7h']).
+
+        Returns:
+        An integer from 1 to 5 representing the relative strength of the hand.
+        '''
+        my_cards = [eval7.Card(card) for card in my_cards]
+        board_cards = [eval7.Card(card) for card in board_cards]
+
+        # Evaluate the player's hand combined with the board
+        my_hand = my_cards + board_cards
+        my_hand_value = eval7.evaluate(my_hand)
+
+        # Evaluate the board alone
+        board_value = eval7.evaluate(board_cards)
+
+        # Determine the relative strength
+        difference = my_hand_value - board_value
+        if difference > 1000:
+            return 1  # Very Strong
+        elif difference > 500:
+            return 2  # Strong
+        elif difference > 0:
+            return 3  # Neutral
+        elif difference > -500:
+            return 4  # Weak
+        else:
+            return 5  # Very Weak
+
     def print_info(self, game_state, round_state, active):
         """
         Print out information about the state of the game
@@ -448,8 +464,13 @@ class Player(Bot):
 
         board_texture = self.determine_board_texture(board_cards)
         hole_strength = self.hole_strength(my_cards)
+        hand_strength = self.hand_strength(my_cards, board_cards)
+        hand_rank = self.hand_rank(my_cards, board_cards)
+        has_raised = my_pip > 1
 
         print("My cards: ", my_cards)
+        print("hand_strength: ", hand_strength)
+        print("Hand rank:", hand_rank)
         print("Hole strength: ", hole_strength)
         print("Board cards: ", board_cards)
         print("Board texture: ", board_texture)
