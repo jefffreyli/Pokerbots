@@ -292,28 +292,35 @@ class Player(Bot):
                     return CheckAction() if CheckAction in legal_actions else FoldAction()
             else:
                 if not has_raised and RaiseAction in legal_actions:
-                    raise_amount = int(min_raise + (max_raise - min_raise) * 0.015)
+                    raise_amount = int(min_raise + (max_raise - min_raise) * 0.0135)
                     return RaiseAction(raise_amount)
                 return CallAction() if CallAction in legal_actions else CheckAction()
         
         if street < 3 and hole_strength == "orange":
-            if random.random() < 0.05 and not has_hit_bounty:
+            if continue_cost/(pot_total + 0.1) > 5:
+                return CheckAction() if CheckAction in legal_actions else FoldAction()
+            elif random.random() < 0.05 and not has_hit_bounty:
                 if small_blind and continue_cost < 5 and CallAction in legal_actions: # call to see the flop
                     return CallAction()
                 else:
                     return CheckAction() if CheckAction in legal_actions else FoldAction()
             else:
                 if not has_raised and RaiseAction in legal_actions:
-                    raise_amount = int(min_raise + (max_raise - min_raise) * 0.015)
+                    raise_amount = int(min_raise + (max_raise - min_raise) * 0.012)
                     return RaiseAction(raise_amount)
                 return CallAction() if CallAction in legal_actions else CheckAction()
 
         if street == 3:
-            if win_rate > effective_pot_odds :
+            if win_rate > effective_pot_odds:
                 if RaiseAction in legal_actions and hand_rank <= 9:
                     raise_amount = int(min_raise + (max_raise - min_raise) * 0.03)
                     return RaiseAction(raise_amount)
-            return CallAction() if CallAction in legal_actions else CheckAction()
+
+            # # Check fold if the hand is weak and the continue_cost is greater than equal 1/4 of the pot
+            # elif continue_cost/(pot_total + 0.1) >= 0.5:
+            #     return CheckAction() if CheckAction in legal_actions else FoldAction()
+            else:
+                return CallAction() if CallAction in legal_actions else CheckAction() if CheckAction in legal_actions else FoldAction()
         
         if street == 4:
             if win_rate > effective_pot_odds: # good chance of winning
@@ -332,7 +339,6 @@ class Player(Bot):
                 if RaiseAction in legal_actions:
                     raise_amount = int(min_raise + (max_raise - min_raise) * 0.3)
                     return RaiseAction(raise_amount)
-                    
                 # only call if continue_cost is less than 1/4 of the pot
                 elif continue_cost/pot_total < 0.25 and CallAction in legal_actions:
                     return CallAction()
@@ -463,6 +469,7 @@ class Player(Bot):
         my_bounty = round_state.bounties[active]  # your current bounty rank
         my_contribution = STARTING_STACK - my_stack  # the number of chips you have contributed to the pot
         opp_contribution = STARTING_STACK - opp_stack  # the number of chips your opponent has contributed to the pot
+        pot_total = my_contribution + opp_contribution
 
         win_rate = self.calculate_win_rate(my_cards, board_cards)
         pot_odds = continue_cost / (my_pip + opp_pip + 0.1)
@@ -475,6 +482,9 @@ class Player(Bot):
         has_raised = my_pip > 1
 
         print("My cards: ", my_cards)
+        print("Continue cost: ", continue_cost)
+        print("Pot total:", pot_total)
+        print("Call amount decimal: ", continue_cost/pot_total)
         print("hand_strength: ", hand_strength)
         print("Hand rank:", hand_rank)
         print("Hole strength: ", hole_strength)
