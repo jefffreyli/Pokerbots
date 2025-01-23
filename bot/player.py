@@ -332,6 +332,11 @@ class Player(Bot):
                 if RaiseAction in legal_actions:
                     raise_amount = int(min_raise + (max_raise - min_raise) * 0.3)
                     return RaiseAction(raise_amount)
+                # only call if continue_cost is less than 1/4 of the pot
+                elif continue_cost/pot_total < 0.25 and CallAction in legal_actions:
+                    return CallAction()
+                elif CheckAction in legal_actions:
+                    return CheckAction()
                 return CallAction() if CallAction in legal_actions else CheckAction()
             return CallAction() if CallAction in legal_actions else CheckAction()
         
