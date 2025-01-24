@@ -1,0 +1,2 @@
+if continue_cost/(pot_total + 0.1) > 5:
+    return FoldAction()
