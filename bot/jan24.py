@@ -55,18 +55,18 @@ class Player(Bot):
                 "44o", "44s",
             },
             "yellow": {
-                 "A9o", "A8o", "A3s", "A2s",
-                 "KTo","KJo","K8s", "K7s", "K6s", "K5s", "K4s", "K3s", "K2s",
-                 "QJo", "QTo", "Q8s", "Q7s",
-                 "JTo","J8s", "J7s",
-                 "T8s", "T7s",
-                 "98s", "97s",
-                 "87s", "86s",
-                 "76s",
-                 "65s", 
-                 "54s", "57s",
-                 "33s", "33o",
-                 "22s", "22o"
+                "A9o", "A8o", "A3s", "A2s",
+                "KTo", "KJo", "K8s", "K7s", "K6s", "K5s", "K4s", "K3s", "K2s",
+                "QJo", "QTo", "Q8s", "Q7s",
+                "JTo", "J8s", "J7s",
+                "T8s", "T7s",
+                "98s", "97s",
+                "87s", "86s",
+                "76s",
+                "65s",
+                "54s", "57s",
+                "33s", "33o",
+                "22s", "22o"
             },
             "orange": {
                 "A7o", "A6o", "A5o", "A4o", "A3o", "A2o",
@@ -82,7 +82,9 @@ class Player(Bot):
                 "43s", "42s"
             }
         }
-        
+
+        self.times_raised = 0
+
     def hole_strength(self, my_cards):
         rank1 = my_cards[0][0]
         suit1 = my_cards[0][1]
@@ -99,11 +101,11 @@ class Player(Bot):
 
         # Check against hand ranges
         for strength, hands in self.hand_ranges.items():
-            if hand_rank+suit in hands or hand_rank[::-1]+suit in hands:  # Check both orientations
+            # Check both orientations
+            if hand_rank+suit in hands or hand_rank[::-1]+suit in hands:
                 return strength
 
         return "unknown"  # Return "unknown" if not found in any range
-
 
     def calculate_win_rate(self, my_cards, board_cards):
         MC_ITER = 100
@@ -115,7 +117,7 @@ class Player(Bot):
 
         for card in my_cards + board_cards:
             deck.cards.remove(card)
-        
+
         score = 0
         for _ in range(MC_ITER):
 
@@ -139,7 +141,7 @@ class Player(Bot):
                 score += 0
             else:
                 score += 0.5
-        
+
         win_rate = score / MC_ITER
 
         return win_rate
@@ -177,7 +179,6 @@ class Player(Bot):
 
         return outs
 
-
     def handle_new_round(self, game_state, round_state, active):
         '''
         Called when a new round starts. Called NUM_ROUNDS times.
@@ -191,12 +192,14 @@ class Player(Bot):
         Nothing.
         '''
         my_bankroll = game_state.bankroll  # the total number of chips you've gained or lost from the beginning of the game to the start of this round
-        game_clock = game_state.game_clock  # the total number of seconds your bot has left to play this game
+        # the total number of seconds your bot has left to play this game
+        game_clock = game_state.game_clock
         round_num = game_state.round_num  # the round number from 1 to NUM_ROUNDS
         my_cards = round_state.hands[active]  # your cards
         big_blind = bool(active)  # True if you are the big blind
         my_bounty = round_state.bounties[active]  # your current bounty rank
-        
+
+        self.times_raised = 0
 
     def handle_round_over(self, game_state, terminal_state, active):
         '''
@@ -212,25 +215,27 @@ class Player(Bot):
         '''
         my_delta = terminal_state.deltas[active]  # your bankroll change from this round
         previous_state = terminal_state.previous_state  # RoundState before payoffs
-        #street = previous_state.street  # 0, 3, 4, or 5 representing when this round ended
-        #my_cards = previous_state.hands[active]  # your cards
-        #opp_cards = previous_state.hands[1-active]  # opponent's cards or [] if not revealed
+        # street = previous_state.street  # 0, 3, 4, or 5 representing when this round ended
+        # my_cards = previous_state.hands[active]  # your cards
+        # opp_cards = previous_state.hands[1-active]  # opponent's cards or [] if not revealed
 
         print("My delta: ", my_delta)
         print("------------------------------------------\n")
-        
-        my_bounty_hit = terminal_state.bounty_hits[active]  # True if you hit bounty
-        opponent_bounty_hit = terminal_state.bounty_hits[1-active] # True if opponent hit bounty
+
+        # True if you hit bounty
+        my_bounty_hit = terminal_state.bounty_hits[active]
+        # True if opponent hit bounty
+        opponent_bounty_hit = terminal_state.bounty_hits[1-active]
         bounty_rank = previous_state.bounties[active]  # your bounty rank
 
         # The following is a demonstration of accessing illegal information (will not work)
-        opponent_bounty_rank = previous_state.bounties[1-active]  # attempting to grab opponent's bounty rank
+        # attempting to grab opponent's bounty rank
+        opponent_bounty_rank = previous_state.bounties[1-active]
 
         if my_bounty_hit:
             print("I hit my bounty of " + bounty_rank + "!")
         if opponent_bounty_hit:
             print("Opponent hit their bounty of " + opponent_bounty_rank + "!")
-
 
     def get_action(self, game_state, round_state, active):
         '''
@@ -248,34 +253,45 @@ class Player(Bot):
         self.print_info(game_state, round_state, active)
 
         # VARIABLESVARIABLESVARIABLESVARIABLESVARIABLESVARIABLES
-        legal_actions = round_state.legal_actions()  # the actions you are allowed to take
-        street = round_state.street  # 0, 3, 4, or 5 representing pre-flop, flop, turn, or river respectively
+        # the actions you are allowed to take
+        legal_actions = round_state.legal_actions()
+        # 0, 3, 4, or 5 representing pre-flop, flop, turn, or river respectively
+        street = round_state.street
         my_cards = round_state.hands[active]  # your cards
         board_cards = round_state.deck[:street]  # the board cards
-        my_pip = round_state.pips[active]  # the number of chips you have contributed to the pot this round of betting
-        opp_pip = round_state.pips[1-active]  # the number of chips your opponent has contributed to the pot this round of betting
-        my_stack = round_state.stacks[active]  # the number of chips you have remaining
-        opp_stack = round_state.stacks[1-active]  # the number of chips your opponent has remaining
+        # the number of chips you have contributed to the pot this round of betting
+        my_pip = round_state.pips[active]
+        # the number of chips your opponent has contributed to the pot this round of betting
+        opp_pip = round_state.pips[1-active]
+        # the number of chips you have remaining
+        my_stack = round_state.stacks[active]
+        # the number of chips your opponent has remaining
+        opp_stack = round_state.stacks[1-active]
         continue_cost = opp_pip - my_pip  # the number of chips needed to stay in the pot
         my_bounty = round_state.bounties[active]  # your current bounty rank
-        my_contribution = STARTING_STACK - my_stack  # the number of chips you have contributed to the pot
-        opp_contribution = STARTING_STACK - opp_stack  # the number of chips your opponent has contributed to the pot
+        # the number of chips you have contributed to the pot
+        my_contribution = STARTING_STACK - my_stack
+        # the number of chips your opponent has contributed to the pot
+        opp_contribution = STARTING_STACK - opp_stack
         pot_total = my_contribution + opp_contribution
-        min_raise, max_raise = round_state.raise_bounds()  # the smallest and largest numbers of chips for a legal bet/raise
-        
+        # the smallest and largest numbers of chips for a legal bet/raise
+        min_raise, max_raise = round_state.raise_bounds()
+
         big_blind = bool(active)
         small_blind = not big_blind
         win_rate = self.calculate_win_rate(my_cards, board_cards)
         pot_odds = continue_cost / (pot_total + continue_cost + 0.1)
         bounty_bonus_ev = 0.405 * (0.5 * opp_pip + 10)
-        effective_pot_odds = continue_cost / (pot_total + continue_cost + bounty_bonus_ev)
+        effective_pot_odds = continue_cost / \
+            (pot_total + continue_cost + bounty_bonus_ev)
         hole_strength = self.hole_strength(my_cards)
         has_raised = my_pip > 1
         # hand_rank = self.hand_rank(my_cards, board_cards)
         has_hit_bounty = self.bounty_hit(my_cards, board_cards, my_bounty)
 
         hand_strength = self.hand_strength(my_cards, board_cards)
-        board_strength = self.hand_strength(my_cards=[], board_cards=board_cards)
+        board_strength = self.hand_strength(
+            my_cards=[], board_cards=board_cards)
         hr = PokerRankerHelper()
         hand_rank = hr.raw_score_to_rank(hand_strength)
         board_rank = hr.raw_score_to_rank(board_strength)
@@ -283,8 +299,9 @@ class Player(Bot):
         # STRATEGYSTRATEGYSTRATEGYSTRATEGYSTRATEGYSTRATEGY
         # On the preflop round, check fold some percentage of the time on "weak" hands
         if street < 3 and hole_strength == "green":
-            if not has_raised and RaiseAction in legal_actions:
+            if self.times_raised < 2 and RaiseAction in legal_actions:
                 raise_amount = int(min_raise + (max_raise - min_raise) * 0.015)
+                self.times_raised+=1
                 return RaiseAction(raise_amount)
             elif CallAction in legal_actions:
                 return CallAction()
@@ -293,41 +310,49 @@ class Player(Bot):
 
         if street < 3 and hole_strength == "yellow":
             if random.random() < 0.1 and not has_hit_bounty:
-                if small_blind and continue_cost < 5 and CallAction in legal_actions: # call to see the flop
+                if small_blind and continue_cost < 5 and CallAction in legal_actions:  # call to see the flop
                     return CallAction()
                 else:
                     return CheckAction() if CheckAction in legal_actions else FoldAction()
             else:
-                if not has_raised and RaiseAction in legal_actions:
-                    raise_amount = int(min_raise + (max_raise - min_raise) * 0.0135)
+                if self.times_raised < 2 and RaiseAction in legal_actions:
+                    raise_amount = int(
+                        min_raise + (max_raise - min_raise) * 0.0135)
+                    self.times_raised+=1
                     return RaiseAction(raise_amount)
                 return CallAction() if CallAction in legal_actions else CheckAction()
-        
+
         if street < 3 and hole_strength == "orange":
             if continue_cost/(pot_total + 0.1) > 5:
                 return FoldAction()
             elif random.random() < 0.05 and not has_hit_bounty:
-                if small_blind and continue_cost < 5 and CallAction in legal_actions: # call to see the flop
+                if small_blind and continue_cost < 5 and CallAction in legal_actions:  # call to see the flop
                     return CallAction()
                 else:
                     return CheckAction() if CheckAction in legal_actions else FoldAction()
             else:
-                if not has_raised and RaiseAction in legal_actions:
-                    raise_amount = int(min_raise + (max_raise - min_raise) * 0.012)
+                if self.times_raised < 2 and RaiseAction in legal_actions:
+                    raise_amount = int(
+                        min_raise + (max_raise - min_raise) * 0.012)
+                    self.times_raised+=1
                     return RaiseAction(raise_amount)
                 return CallAction() if CallAction in legal_actions else CheckAction()
 
         if street == 3:
             if win_rate > effective_pot_odds:
-                if RaiseAction in legal_actions and hand_rank <= 6500 and board_rank - hand_rank > 500:
-                    raise_amount = int(min_raise + (max_raise - min_raise) * 0.03)
+                if self.times_raised < 2 and RaiseAction in legal_actions and hand_rank <= 6500 and board_rank - hand_rank > 500:
+                    raise_amount = int(
+                        min_raise + (max_raise - min_raise) * 0.03)
+                    self.times_raised+=1
                     return RaiseAction(raise_amount)
             return CallAction() if CallAction in legal_actions else CheckAction()
-        
+
         if street == 4:
-            if win_rate > effective_pot_odds and hand_rank <= 4000 and board_rank - hand_rank > 500: # good chance of winning
-                if RaiseAction in legal_actions and hand_rank <= 4000 and board_rank - hand_rank > 500:
-                    raise_amount = int(min_raise + (max_raise - min_raise) * 0.15)
+            if win_rate > effective_pot_odds and hand_rank <= 4000 and board_rank - hand_rank > 500:  # good chance of winning
+                if self.times_raised < 2 and RaiseAction in legal_actions and hand_rank <= 4000 and board_rank - hand_rank > 500:
+                    raise_amount = int(
+                        min_raise + (max_raise - min_raise) * 0.15)
+                    self.times_raised+=1
                     return RaiseAction(raise_amount)
                 elif CallAction in legal_actions:
                     return CallAction()
@@ -335,34 +360,36 @@ class Player(Bot):
                     return CheckAction()
             elif hand_rank <= 4000 and board_rank - hand_rank > 500 and CallAction in legal_actions:
                 return CallAction()
-            else: # bad chance of winning
+            else:  # bad chance of winning
                 return CheckAction() if CheckAction in legal_actions else FoldAction()
-        
+
         if street == 5:
             if win_rate > effective_pot_odds and hand_rank <= 3500 and board_rank - hand_rank > 500:
-                if RaiseAction in legal_actions:
-                    raise_amount = int(min_raise + (max_raise - min_raise) * 0.3)
+                if self.times_raised < 2 and RaiseAction in legal_actions:
+                    raise_amount = int(
+                        min_raise + (max_raise - min_raise) * 0.3)
+                    self.times_raised+=1
                     return RaiseAction(raise_amount)
-                    
+
                 # only call if continue_cost is less than 1/4 of the pot
                 elif hand_rank <= 3500 and board_rank - hand_rank > 500 and CallAction in legal_actions:
                     return CallAction()
                 elif CheckAction in legal_actions:
                     return CheckAction()
                 return FoldAction()
-            
+
             elif hand_rank <= 3500 and board_rank - hand_rank > 500 and CallAction in legal_actions:
                 return CallAction()
             else:
                 return CheckAction() if CheckAction in legal_actions else FoldAction()
-        
+
         # Default action
         return CheckAction() if CheckAction in legal_actions else FoldAction()
 
     def bounty_hit(self, cards, board, bounty_rank):
         """
         Return True if your hole cards or the board contains your bounty rank.
-        
+
         Arguments:
         cards: List of your hole cards (e.g., [('A', 's'), ('T', 'h')] => ranks are 'A', 'T').
         board: List of board cards (e.g., [('K', 'h'), ('T', 'd'), ('5', 'c')] => ranks are 'K', 'T', '5').
@@ -373,7 +400,7 @@ class Player(Bot):
         """
         # Combine the ranks from hole cards and board cards
         ranks = [c[0] for c in cards + board]
-        
+
         # Check if bounty rank exists in the combined ranks
         return bounty_rank in ranks
 
@@ -411,26 +438,36 @@ class Player(Bot):
         Print out information about the state of the game
         """
 
-        legal_actions = round_state.legal_actions()  # the actions you are allowed to take
-        street = round_state.street  # 0, 3, 4, or 5 representing pre-flop, flop, turn, or river respectively
+        # the actions you are allowed to take
+        legal_actions = round_state.legal_actions()
+        # 0, 3, 4, or 5 representing pre-flop, flop, turn, or river respectively
+        street = round_state.street
         my_cards = round_state.hands[active]  # your cards
         board_cards = round_state.deck[:street]  # the board cards
-        my_pip = round_state.pips[active]  # the number of chips you have contributed to the pot this round of betting
-        opp_pip = round_state.pips[1-active]  # the number of chips your opponent has contributed to the pot this round of betting
-        my_stack = round_state.stacks[active]  # the number of chips you have remaining
-        opp_stack = round_state.stacks[1-active]  # the number of chips your opponent has remaining
+        # the number of chips you have contributed to the pot this round of betting
+        my_pip = round_state.pips[active]
+        # the number of chips your opponent has contributed to the pot this round of betting
+        opp_pip = round_state.pips[1-active]
+        # the number of chips you have remaining
+        my_stack = round_state.stacks[active]
+        # the number of chips your opponent has remaining
+        opp_stack = round_state.stacks[1-active]
         continue_cost = opp_pip - my_pip  # the number of chips needed to stay in the pot
         my_bounty = round_state.bounties[active]  # your current bounty rank
-        my_contribution = STARTING_STACK - my_stack  # the number of chips you have contributed to the pot
-        opp_contribution = STARTING_STACK - opp_stack  # the number of chips your opponent has contributed to the pot
+        # the number of chips you have contributed to the pot
+        my_contribution = STARTING_STACK - my_stack
+        # the number of chips your opponent has contributed to the pot
+        opp_contribution = STARTING_STACK - opp_stack
         pot_total = my_contribution + opp_contribution
 
         win_rate = self.calculate_win_rate(my_cards, board_cards)
         pot_odds = continue_cost / (my_pip + opp_pip + 0.1)
 
         bounty_bonus_ev = 0.405 * (0.5 * opp_pip + 10)
-        effective_pot_odds = continue_cost / (pot_total + continue_cost + bounty_bonus_ev)
-        min_raise, max_raise = round_state.raise_bounds()  # the smallest and largest numbers of chips for a legal bet/raise
+        effective_pot_odds = continue_cost / \
+            (pot_total + continue_cost + bounty_bonus_ev)
+        # the smallest and largest numbers of chips for a legal bet/raise
+        min_raise, max_raise = round_state.raise_bounds()
 
         board_texture = self.determine_board_texture(board_cards)
         hole_strength = self.hole_strength(my_cards)
@@ -440,7 +477,7 @@ class Player(Bot):
         board_strength = self.hand_strength([], board_cards)
         hr = PokerRankerHelper()
         hand_rank = hr.raw_score_to_rank(hand_strength)
-        board_rank =hr.raw_score_to_rank(board_strength)
+        board_rank = hr.raw_score_to_rank(board_strength)
 
         print("My cards: ", my_cards)
         print("hand_rank: ", hand_rank)
