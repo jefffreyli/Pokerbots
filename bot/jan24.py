@@ -1,6 +1,7 @@
-'''
+"""
 Simple example pokerbot, written in Python.
-'''
+"""
+
 from skeleton.actions import FoldAction, CallAction, CheckAction, RaiseAction
 from skeleton.states import GameState, TerminalState, RoundState
 from skeleton.states import NUM_ROUNDS, STARTING_STACK, BIG_BLIND, SMALL_BLIND
@@ -13,24 +14,25 @@ from poker_ranker_helper import PokerRankerHelper
 
 
 class Player(Bot):
-    '''
+    """
     A pokerbot.
-    '''
+    """
+
     HAND_RANKS = {
-        "Royal Flush":      1,
-        "Straight Flush":   2,
-        "Four of a Kind":   3,
-        "Full House":       4,
-        "Flush":            5,
-        "Straight":         6,
-        "Three of a Kind":  7,
-        "Two Pair":         8,
-        "One Pair":         9,
-        "High Card":       10
+        "Royal Flush": 1,
+        "Straight Flush": 2,
+        "Four of a Kind": 3,
+        "Full House": 4,
+        "Flush": 5,
+        "Straight": 6,
+        "Three of a Kind": 7,
+        "Two Pair": 8,
+        "One Pair": 9,
+        "High Card": 10,
     }
 
     def __init__(self):
-        '''
+        """
         Called when a new game starts. Called exactly once.
 
         Arguments:
@@ -38,49 +40,161 @@ class Player(Bot):
 
         Returns:
         Nothing.
-        '''
+        """
 
         self.hand_ranges = {
             "green": {
-                "AAo", "AAs", "AKo", "AKs", "AQo", "AQs", "AJo", "AJs", "ATo", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s",
-                "KKo", "KKs", "KQo", "KQs", "KJs", "KTs", "K9s",
-                "QQo", "QQs", "QJs", "QTs", "Q9s",
-                "JJo", "JJs", "JTs", "J9s",
-                "TTo", "TTs", "T9s",
-                "99o", "99s",
-                "88o", "88s",
-                "77o", "77s",
-                "66o", "66s",
-                "55o", "55s",
-                "44o", "44s",
+                "AAo",
+                "AAs",
+                "AKo",
+                "AKs",
+                "AQo",
+                "AQs",
+                "AJo",
+                "AJs",
+                "ATo",
+                "ATs",
+                "A9s",
+                "A8s",
+                "A7s",
+                "A6s",
+                "A5s",
+                "A4s",
+                "KKo",
+                "KKs",
+                "KQo",
+                "KQs",
+                "KJs",
+                "KTs",
+                "K9s",
+                "QQo",
+                "QQs",
+                "QJs",
+                "QTs",
+                "Q9s",
+                "JJo",
+                "JJs",
+                "JTs",
+                "J9s",
+                "TTo",
+                "TTs",
+                "T9s",
+                "99o",
+                "99s",
+                "88o",
+                "88s",
+                "77o",
+                "77s",
+                "66o",
+                "66s",
+                "55o",
+                "55s",
+                "44o",
+                "44s",
             },
             "yellow": {
-                "A9o", "A8o", "A3s", "A2s",
-                "KTo", "KJo", "K8s", "K7s", "K6s", "K5s", "K4s", "K3s", "K2s",
-                "QJo", "QTo", "Q8s", "Q7s",
-                "JTo", "J8s", "J7s",
-                "T8s", "T7s",
-                "98s", "97s",
-                "87s", "86s",
+                "A9o",
+                "A8o",
+                "A3s",
+                "A2s",
+                "KTo",
+                "KJo",
+                "K8s",
+                "K7s",
+                "K6s",
+                "K5s",
+                "K4s",
+                "K3s",
+                "K2s",
+                "QJo",
+                "QTo",
+                "Q8s",
+                "Q7s",
+                "JTo",
+                "J8s",
+                "J7s",
+                "T8s",
+                "T7s",
+                "98s",
+                "97s",
+                "87s",
+                "86s",
                 "76s",
                 "65s",
-                "54s", "57s",
-                "33s", "33o",
-                "22s", "22o"
+                "54s",
+                "57s",
+                "33s",
+                "33o",
+                "22s",
+                "22o",
             },
             "orange": {
-                "A7o", "A6o", "A5o", "A4o", "A3o", "A2o",
-                "K9o", "K8o", "K7o", "K6o", "K5o", "K4o", "K3o",
-                "Q9o", "Q8o", "Q7o", "Q6o", "Q5o", "Q6s", "Q5s", "Q4s", "Q3s", "Q2s",
-                "J9o", "J8o", "J7o", "J6o", "J6s", "J5s", "J4s", "J3s", "J2s",
-                "T9o", "T8o", "T7o", "T6o", "T6s", "T5s", "T4s", "T3s", "T2s",
-                "98o", "97o", "96o", "95s", "94s", "93s", "92s",
-                "87o", "86o", "85o", "84s", "83s", "82s",
-                "76o", "75o", "74s", "73s",
-                "65o", "63s", "62s",
-                "54o", "52s",
-                "43s", "42s"
-            }
+                "A7o",
+                "A6o",
+                "A5o",
+                "A4o",
+                "A3o",
+                "A2o",
+                "K9o",
+                "K8o",
+                "K7o",
+                "K6o",
+                "K5o",
+                "K4o",
+                "K3o",
+                "Q9o",
+                "Q8o",
+                "Q7o",
+                "Q6o",
+                "Q5o",
+                "Q6s",
+                "Q5s",
+                "Q4s",
+                "Q3s",
+                "Q2s",
+                "J9o",
+                "J8o",
+                "J7o",
+                "J6o",
+                "J6s",
+                "J5s",
+                "J4s",
+                "J3s",
+                "J2s",
+                "T9o",
+                "T8o",
+                "T7o",
+                "T6o",
+                "T6s",
+                "T5s",
+                "T4s",
+                "T3s",
+                "T2s",
+                "98o",
+                "97o",
+                "96o",
+                "95s",
+                "94s",
+                "93s",
+                "92s",
+                "87o",
+                "86o",
+                "85o",
+                "84s",
+                "83s",
+                "82s",
+                "76o",
+                "75o",
+                "74s",
+                "73s",
+                "65o",
+                "63s",
+                "62s",
+                "54o",
+                "52s",
+                "43s",
+                "42s",
+            },
         }
 
         self.times_raised = 0
@@ -102,7 +216,7 @@ class Player(Bot):
         # Check against hand ranges
         for strength, hands in self.hand_ranges.items():
             # Check both orientations
-            if hand_rank+suit in hands or hand_rank[::-1]+suit in hands:
+            if hand_rank + suit in hands or hand_rank[::-1] + suit in hands:
                 return strength
 
         return "unknown"  # Return "unknown" if not found in any range
@@ -147,7 +261,7 @@ class Player(Bot):
         return win_rate
 
     def calculate_outs(self, my_cards, board_cards):
-        '''
+        """
         Calculate the number of outs (cards that improve your hand) using eval7.
 
         Arguments:
@@ -156,7 +270,7 @@ class Player(Bot):
 
         Returns:
         Number of outs.
-        '''
+        """
         my_cards = [eval7.Card(card) for card in my_cards]
         board_cards = [eval7.Card(card) for card in board_cards]
 
@@ -180,7 +294,7 @@ class Player(Bot):
         return outs
 
     def handle_new_round(self, game_state, round_state, active):
-        '''
+        """
         Called when a new round starts. Called NUM_ROUNDS times.
 
         Arguments:
@@ -190,8 +304,10 @@ class Player(Bot):
 
         Returns:
         Nothing.
-        '''
-        my_bankroll = game_state.bankroll  # the total number of chips you've gained or lost from the beginning of the game to the start of this round
+        """
+        my_bankroll = (
+            game_state.bankroll
+        )  # the total number of chips you've gained or lost from the beginning of the game to the start of this round
         # the total number of seconds your bot has left to play this game
         game_clock = game_state.game_clock
         round_num = game_state.round_num  # the round number from 1 to NUM_ROUNDS
@@ -202,7 +318,7 @@ class Player(Bot):
         self.times_raised = 0
 
     def handle_round_over(self, game_state, terminal_state, active):
-        '''
+        """
         Called when a round ends. Called NUM_ROUNDS times.
 
         Arguments:
@@ -212,7 +328,7 @@ class Player(Bot):
 
         Returns:
         Nothing.
-        '''
+        """
         my_delta = terminal_state.deltas[active]  # your bankroll change from this round
         previous_state = terminal_state.previous_state  # RoundState before payoffs
         # street = previous_state.street  # 0, 3, 4, or 5 representing when this round ended
@@ -225,20 +341,23 @@ class Player(Bot):
         # True if you hit bounty
         my_bounty_hit = terminal_state.bounty_hits[active]
         # True if opponent hit bounty
-        opponent_bounty_hit = terminal_state.bounty_hits[1-active]
+        opponent_bounty_hit = terminal_state.bounty_hits[1 - active]
         bounty_rank = previous_state.bounties[active]  # your bounty rank
 
         # The following is a demonstration of accessing illegal information (will not work)
         # attempting to grab opponent's bounty rank
-        opponent_bounty_rank = previous_state.bounties[1-active]
+        opponent_bounty_rank = previous_state.bounties[1 - active]
 
         if my_bounty_hit:
             print("I hit my bounty of " + bounty_rank + "!")
         if opponent_bounty_hit:
             print("Opponent hit their bounty of " + opponent_bounty_rank + "!")
 
+        with open("bankroll.txt", "a") as f:
+            f.write(str(game_state.bankroll) + "\n")
+
     def get_action(self, game_state, round_state, active):
-        '''
+        """
         Where the magic happens - your code should implement this function.
         Called any time the engine needs an action from your bot.
 
@@ -249,7 +368,7 @@ class Player(Bot):
 
         Returns:
         Your action.
-        '''
+        """
         self.print_info(game_state, round_state, active)
 
         # VARIABLESVARIABLESVARIABLESVARIABLESVARIABLESVARIABLES
@@ -262,12 +381,14 @@ class Player(Bot):
         # the number of chips you have contributed to the pot this round of betting
         my_pip = round_state.pips[active]
         # the number of chips your opponent has contributed to the pot this round of betting
-        opp_pip = round_state.pips[1-active]
+        opp_pip = round_state.pips[1 - active]
         # the number of chips you have remaining
         my_stack = round_state.stacks[active]
         # the number of chips your opponent has remaining
-        opp_stack = round_state.stacks[1-active]
-        continue_cost = opp_pip - my_pip  # the number of chips needed to stay in the pot
+        opp_stack = round_state.stacks[1 - active]
+        continue_cost = (
+            opp_pip - my_pip
+        )  # the number of chips needed to stay in the pot
         my_bounty = round_state.bounties[active]  # your current bounty rank
         # the number of chips you have contributed to the pot
         my_contribution = STARTING_STACK - my_stack
@@ -282,26 +403,30 @@ class Player(Bot):
         win_rate = self.calculate_win_rate(my_cards, board_cards)
         pot_odds = continue_cost / (pot_total + continue_cost + 0.1)
         bounty_bonus_ev = 0.405 * (0.5 * opp_pip + 10)
-        effective_pot_odds = continue_cost / \
-            (pot_total + continue_cost + bounty_bonus_ev)
+        effective_pot_odds = continue_cost / (
+            pot_total + continue_cost + bounty_bonus_ev
+        )
         hole_strength = self.hole_strength(my_cards)
         has_raised = my_pip > 1
         # hand_rank = self.hand_rank(my_cards, board_cards)
         has_hit_bounty = self.bounty_hit(my_cards, board_cards, my_bounty)
 
         hand_strength = self.hand_strength(my_cards, board_cards)
-        board_strength = self.hand_strength(
-            my_cards=[], board_cards=board_cards)
+        board_strength = self.hand_strength(my_cards=[], board_cards=board_cards)
         hr = PokerRankerHelper()
         hand_rank = hr.raw_score_to_rank(hand_strength)
         board_rank = hr.raw_score_to_rank(board_strength)
 
         # STRATEGYSTRATEGYSTRATEGYSTRATEGYSTRATEGYSTRATEGY
         # On the preflop round, check fold some percentage of the time on "weak" hands
+
+        if game_state.bankroll > ((NUM_ROUNDS - game_state.round_num) * 2 * BIG_BLIND):
+            return FoldAction()
+
         if street < 3 and hole_strength == "green":
             if self.times_raised < 2 and RaiseAction in legal_actions:
                 raise_amount = int(min_raise + (max_raise - min_raise) * 0.015)
-                self.times_raised+=1
+                self.times_raised += 1
                 return RaiseAction(raise_amount)
             elif CallAction in legal_actions:
                 return CallAction()
@@ -310,75 +435,108 @@ class Player(Bot):
 
         if street < 3 and hole_strength == "yellow":
             if random.random() < 0.1 and not has_hit_bounty:
-                if small_blind and continue_cost < 5 and CallAction in legal_actions:  # call to see the flop
+                if (
+                    small_blind and continue_cost < 5 and CallAction in legal_actions
+                ):  # call to see the flop
                     return CallAction()
                 else:
-                    return CheckAction() if CheckAction in legal_actions else FoldAction()
+                    return (
+                        CheckAction() if CheckAction in legal_actions else FoldAction()
+                    )
             else:
                 if self.times_raised < 2 and RaiseAction in legal_actions:
-                    raise_amount = int(
-                        min_raise + (max_raise - min_raise) * 0.0135)
-                    self.times_raised+=1
+                    raise_amount = int(min_raise + (max_raise - min_raise) * 0.0135)
+                    self.times_raised += 1
                     return RaiseAction(raise_amount)
                 return CallAction() if CallAction in legal_actions else CheckAction()
 
         if street < 3 and hole_strength == "orange":
-            if continue_cost/(pot_total + 0.1) > 5:
+            if continue_cost / (pot_total + 0.1) > 5:
                 return FoldAction()
             elif random.random() < 0.05 and not has_hit_bounty:
-                if small_blind and continue_cost < 5 and CallAction in legal_actions:  # call to see the flop
+                if (
+                    small_blind and continue_cost < 5 and CallAction in legal_actions
+                ):  # call to see the flop
                     return CallAction()
                 else:
-                    return CheckAction() if CheckAction in legal_actions else FoldAction()
+                    return (
+                        CheckAction() if CheckAction in legal_actions else FoldAction()
+                    )
             else:
                 if self.times_raised < 2 and RaiseAction in legal_actions:
-                    raise_amount = int(
-                        min_raise + (max_raise - min_raise) * 0.012)
-                    self.times_raised+=1
+                    raise_amount = int(min_raise + (max_raise - min_raise) * 0.012)
+                    self.times_raised += 1
                     return RaiseAction(raise_amount)
                 return CallAction() if CallAction in legal_actions else CheckAction()
 
         if street == 3:
             if win_rate > effective_pot_odds:
-                if self.times_raised < 2 and RaiseAction in legal_actions and hand_rank <= 6500 and board_rank - hand_rank > 500:
-                    raise_amount = int(
-                        min_raise + (max_raise - min_raise) * 0.03)
-                    self.times_raised+=1
+                if (
+                    self.times_raised < 2
+                    and RaiseAction in legal_actions
+                    and hand_rank <= 6500
+                    and board_rank - hand_rank > 500
+                ):
+                    raise_amount = int(min_raise + (max_raise - min_raise) * 0.03)
+                    self.times_raised += 1
                     return RaiseAction(raise_amount)
             return CallAction() if CallAction in legal_actions else CheckAction()
 
         if street == 4:
-            if win_rate > effective_pot_odds and hand_rank <= 4000 and board_rank - hand_rank > 500:  # good chance of winning
-                if self.times_raised < 2 and RaiseAction in legal_actions and hand_rank <= 4000 and board_rank - hand_rank > 500:
-                    raise_amount = int(
-                        min_raise + (max_raise - min_raise) * 0.15)
-                    self.times_raised+=1
+            if (
+                win_rate > effective_pot_odds
+                and hand_rank <= 4000
+                and board_rank - hand_rank > 500
+            ):  # good chance of winning
+                if (
+                    self.times_raised < 2
+                    and RaiseAction in legal_actions
+                    and hand_rank <= 4000
+                    and board_rank - hand_rank > 500
+                ):
+                    raise_amount = int(min_raise + (max_raise - min_raise) * 0.15)
+                    self.times_raised += 1
                     return RaiseAction(raise_amount)
                 elif CallAction in legal_actions:
                     return CallAction()
                 elif CheckAction in legal_actions:
                     return CheckAction()
-            elif hand_rank <= 4000 and board_rank - hand_rank > 500 and CallAction in legal_actions:
+            elif (
+                hand_rank <= 4000
+                and board_rank - hand_rank > 500
+                and CallAction in legal_actions
+            ):
                 return CallAction()
             else:  # bad chance of winning
                 return CheckAction() if CheckAction in legal_actions else FoldAction()
 
         if street == 5:
-            if win_rate > effective_pot_odds and hand_rank <= 3500 and board_rank - hand_rank > 500:
+            if (
+                win_rate > effective_pot_odds
+                and hand_rank <= 3500
+                and board_rank - hand_rank > 500
+            ):
                 if self.times_raised < 2 and RaiseAction in legal_actions:
-                    raise_amount = int(
-                        min_raise + (max_raise - min_raise) * 0.3)
-                    self.times_raised+=1
+                    raise_amount = int(min_raise + (max_raise - min_raise) * 0.3)
+                    self.times_raised += 1
                     return RaiseAction(raise_amount)
 
                 # only call if continue_cost is less than 1/4 of the pot
-                elif hand_rank <= 3500 and board_rank - hand_rank > 500 and CallAction in legal_actions:
+                elif (
+                    hand_rank <= 3500
+                    and board_rank - hand_rank > 500
+                    and CallAction in legal_actions
+                ):
                     return CallAction()
                 elif CheckAction in legal_actions:
                     return CheckAction()
                 return FoldAction()
 
-            elif hand_rank <= 3500 and board_rank - hand_rank > 500 and CallAction in legal_actions:
+            elif (
+                hand_rank <= 3500
+                and board_rank - hand_rank > 500
+                and CallAction in legal_actions
+            ):
                 return CallAction()
             else:
                 return CheckAction() if CheckAction in legal_actions else FoldAction()
@@ -415,7 +573,8 @@ class Player(Bot):
         # Check for straight draws
         rank_values = sorted([eval7.Card(card).rank for card in board_cards])
         straight_draw = any(
-            rank_values[i] + 1 == rank_values[i + 1] for i in range(len(rank_values) - 1)
+            rank_values[i] + 1 == rank_values[i + 1]
+            for i in range(len(rank_values) - 1)
         )
 
         # Determine texture
@@ -447,12 +606,14 @@ class Player(Bot):
         # the number of chips you have contributed to the pot this round of betting
         my_pip = round_state.pips[active]
         # the number of chips your opponent has contributed to the pot this round of betting
-        opp_pip = round_state.pips[1-active]
+        opp_pip = round_state.pips[1 - active]
         # the number of chips you have remaining
         my_stack = round_state.stacks[active]
         # the number of chips your opponent has remaining
-        opp_stack = round_state.stacks[1-active]
-        continue_cost = opp_pip - my_pip  # the number of chips needed to stay in the pot
+        opp_stack = round_state.stacks[1 - active]
+        continue_cost = (
+            opp_pip - my_pip
+        )  # the number of chips needed to stay in the pot
         my_bounty = round_state.bounties[active]  # your current bounty rank
         # the number of chips you have contributed to the pot
         my_contribution = STARTING_STACK - my_stack
@@ -464,8 +625,9 @@ class Player(Bot):
         pot_odds = continue_cost / (my_pip + opp_pip + 0.1)
 
         bounty_bonus_ev = 0.405 * (0.5 * opp_pip + 10)
-        effective_pot_odds = continue_cost / \
-            (pot_total + continue_cost + bounty_bonus_ev)
+        effective_pot_odds = continue_cost / (
+            pot_total + continue_cost + bounty_bonus_ev
+        )
         # the smallest and largest numbers of chips for a legal bet/raise
         min_raise, max_raise = round_state.raise_bounds()
 
@@ -487,7 +649,7 @@ class Player(Bot):
         print("Board texture: ", board_texture)
         print("Win rate: ", win_rate)
         print("Outs: ", self.calculate_outs(my_cards, board_cards))
-        print("Outs percent: ", self.calculate_outs(my_cards, board_cards)*2)
+        print("Outs percent: ", self.calculate_outs(my_cards, board_cards) * 2)
         print("Pot odds: ", pot_odds)
         print("Effective pot odds: ", effective_pot_odds)
         print("My pip: ", my_pip)
@@ -498,5 +660,7 @@ class Player(Bot):
         print("---")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+    with open("bankroll.txt", "w") as f:
+        f.write("")
     run_bot(Player(), parse_args())
